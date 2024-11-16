@@ -86,6 +86,28 @@ namespace АИС_салона_по_аренде_автомобилей
 
             // Обработка события изменения выбранного клиента в comboBox3
             comboBox3.SelectedIndexChanged += comboBox3_SelectedIndexChanged;
+
+
+            comboBox6.Items.Clear();
+            comboBox6.Items.Add("Name");
+            comboBox6.Items.Add("Surname");
+            comboBox6.Items.Add("LastName");
+            comboBox6.Items.Add("Seria");
+            comboBox6.Items.Add("Number");
+            comboBox6.Items.Add("Telephone");
+
+            comboBox7.Items.Clear();
+            comboBox7.Items.Add("Name");
+            comboBox7.Items.Add("Surname");
+            comboBox7.Items.Add("LastName");
+            comboBox7.Items.Add("Post");
+            comboBox7.Items.Add("Telephone");
+            comboBox7.Items.Add("Mail");
+
+            comboBox8.Items.Clear();
+            comboBox8.Items.Add("Stamp");
+            comboBox8.Items.Add("Title");
+            comboBox8.Items.Add("Color");
         }
 
         private void LoadKlientData()
@@ -501,6 +523,69 @@ namespace АИС_салона_по_аренде_автомобилей
             {
                 MessageBox.Show("Пожалуйста, выберите контракт для удаления.");
             }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            string query;
+            if (string.IsNullOrEmpty(textBox1.Text))
+            {
+                // Если поле поиска пустое, загрузить все данные
+                query = "SELECT * FROM Klients";
+            }
+            else
+            {
+                //Поиск по выбранному критерию
+                string selectedField = comboBox6.SelectedItem.ToString();
+                string searchText = textBox1.Text;
+                query = $"SELECT * FROM Klients WHERE {selectedField} LIKE '%{searchText}%'";
+            }
+            adapter = new SQLiteDataAdapter(query, connection);
+            dt = new DataTable();
+            adapter.Fill(dt);
+            dataGridView1.DataSource = dt;
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            string query;
+            if (string.IsNullOrEmpty(textBox8.Text))
+            {
+                // Если поле поиска пустое, загрузить все данные
+                query = "SELECT * FROM Personal";
+            }
+            else
+            {
+                //Поиск по выбранному критерию
+                string selectedField = comboBox7.SelectedItem.ToString();
+                string searchText = textBox8.Text;
+                query = $"SELECT * FROM Personal WHERE {selectedField} LIKE '%{searchText}%'";
+            }
+            adapter = new SQLiteDataAdapter(query, connection);
+            dt = new DataTable();
+            adapter.Fill(dt);
+            dataGridView4.DataSource = dt;
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            string query;
+            if (string.IsNullOrEmpty(textBox9.Text))
+            {
+                // Если поле поиска пустое, загрузить все данные
+                query = "SELECT * FROM Specifications";
+            }
+            else
+            {
+                //Поиск по выбранному критерию
+                string selectedField = comboBox8.SelectedItem.ToString();
+                string searchText = textBox9.Text;
+                query = $"SELECT * FROM Specifications WHERE {selectedField} LIKE '%{searchText}%'";
+            }
+            adapter = new SQLiteDataAdapter(query, connection);
+            dt = new DataTable();
+            adapter.Fill(dt);
+            dataGridView5.DataSource = dt;
         }
     }
 }
