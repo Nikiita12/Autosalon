@@ -118,16 +118,21 @@ namespace АИС_салона_по_аренде_автомобилей
                 cmdUpdateAvailability.Parameters.AddWithValue("@ID", carId);
                 cmdUpdateAvailability.ExecuteNonQuery();
 
+                // Получение текущей даты и времени
+                DateTime now = DateTime.Now;
+                string currentDate = now.ToString("dd.MM.yyyy");
+                string beginArenda = now.ToString("dd.MM.yyyy HH:mm");
+                string endArenda = now.AddDays(days).ToString("dd.MM.yyyy HH:mm");
+
                 // Добавление записи в таблицу контрактов
-                DateTime beginDate = DateTime.Now;
-                DateTime endDate = beginDate.AddDays(days);
-                string queryContract = "INSERT INTO Contract (ID_Klient, ID_Car, Summa, BeginArenda, EndArenda, SeriaKlient, NumberKlient) VALUES (@ID_Klient, @ID_Car, @Summa, @Begin_Date, @End_Date, @Seria_Client, @Number_Client)";
+                string queryContract = "INSERT INTO Contract (ID_Klient, ID_Car, Summa, Date, BeginArenda, EndArenda, SeriaKlient, NumberKlient) VALUES (@ID_Klient, @ID_Car, @Summa, @Date, @BeginArenda, @EndArenda, @Seria_Client, @Number_Client)";
                 SQLiteCommand cmdContract = new SQLiteCommand(queryContract, connection);
                 cmdContract.Parameters.AddWithValue("@ID_Klient", clientId);
                 cmdContract.Parameters.AddWithValue("@ID_Car", carId);
                 cmdContract.Parameters.AddWithValue("@Summa", totalAmount);
-                cmdContract.Parameters.AddWithValue("@Begin_Date", beginDate);
-                cmdContract.Parameters.AddWithValue("@End_Date", endDate);
+                cmdContract.Parameters.AddWithValue("@Date", currentDate);
+                cmdContract.Parameters.AddWithValue("@BeginArenda", beginArenda);
+                cmdContract.Parameters.AddWithValue("@EndArenda", endArenda);
                 cmdContract.Parameters.AddWithValue("@Seria_Client", seria);
                 cmdContract.Parameters.AddWithValue("@Number_Client", number);
                 cmdContract.ExecuteNonQuery();
@@ -141,6 +146,8 @@ namespace АИС_салона_по_аренде_автомобилей
                 MessageBox.Show("Пожалуйста, выберите автомобиль для аренды.");
             }
         }
+
+
         private void textBox1_Validating(object sender, CancelEventArgs e)
         {
             if (!IsValidName(textBox1.Text))
@@ -227,6 +234,18 @@ namespace АИС_салона_по_аренде_автомобилей
             // Обновляем текст надписи над текстовым полем в зависимости от выбранного параметра
             string selectedParameter = (string)comboBox1.SelectedItem;
             label8.Text = $"Введите {selectedParameter}:";
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            // Создаем экземпляр первой формы
+            Form1 form1 = new Form1();
+
+            // Показываем первую форму
+            form1.Show();
+
+            // Закрываем текущую форму (Form3)
+            this.Close();
         }
     }
 }    

@@ -24,13 +24,13 @@ namespace АИС_салона_по_аренде_автомобилей
             {
                 Form2 userForm = new Form2();
                 userForm.ShowDialog();
-                this.Close(); // Закрыть текущую форму после открытия формы пользователя
+                this.Hide(); // Закрыть текущую форму после открытия формы пользователя
             }
             else if (textBox1.Text == "admin" && textBox2.Text == "admin")
             {
                 Form3 adminForm = new Form3();
                 adminForm.ShowDialog();
-                this.Close(); // Закрыть текущую форму после открытия формы администратора
+                this.Hide(); // Закрыть текущую форму после открытия формы администратора
             }
             else
             {
