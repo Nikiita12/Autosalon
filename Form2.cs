@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace АИС_салона_по_аренде_автомобилей
 {
@@ -36,13 +37,15 @@ namespace АИС_салона_по_аренде_автомобилей
             comboBox1.Items.Add("Название");
             comboBox1.Items.Add("Цена");
             comboBox1.Items.Add("Страна");
+            comboBox1.Items.Add("Цвет");
+            comboBox1.Items.Add("Доступность");
             comboBox1.SelectedIndex = 0; // Устанавливаем "Название" в качестве выбранного параметра по умолчаниюию
         }
 
         private void LoadAutomobileData(string searchTerm = "", string searchColumn = "Title")
         {
             connection.Open();
-            string query = "SELECT s.ID AS CarID, s.Stamp, s.Title, s.Color, co.Country AS CountryName, c.Price, c.Availability FROM Specifications s JOIN Cars c ON s.ID = c.ID_auto JOIN Country co ON c.ID_country = co.ID";
+            string query = "SELECT s.ID AS 'ID автомобиля', s.Stamp AS 'Марка', s.Title AS 'Название', s.Color AS 'Цвет', co.Country AS 'Страна', c.Price AS 'Цена', c.Availability AS 'Доступность' FROM Specifications s JOIN Cars c ON s.ID = c.ID_auto JOIN Country co ON c.ID_country = co.ID";
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 switch (searchColumn)
@@ -59,6 +62,12 @@ namespace АИС_салона_по_аренде_автомобилей
                     case "Марка":
                         query += $" WHERE s.Stamp LIKE '%{searchTerm}%'";
                         break;
+                    case "Цвет":
+                        query += $" WHERE s.Color LIKE '%{searchTerm}%'";
+                        break;
+                    case "Доступность":
+                        query += $" WHERE c.Availability LIKE '%{searchTerm}%'";
+                        break;
                 }
             }
             adapter = new SQLiteDataAdapter(query, connection);
@@ -73,7 +82,7 @@ namespace АИС_салона_по_аренде_автомобилей
             if (dataGridView1.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridView1.SelectedRows[0];
-                string availability = selectedRow.Cells["Availability"].Value.ToString();
+                string availability = selectedRow.Cells["Доступность"].Value.ToString();
 
                 if (availability == "No")
                 {
@@ -89,7 +98,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 string number = textBox5.Text;
                 string telephone = textBox6.Text;
                 int days = int.Parse(textBox7.Text);
-                double pricePerDay = double.Parse(selectedRow.Cells["Price"].Value.ToString());
+                double pricePerDay = double.Parse(selectedRow.Cells["Цена"].Value.ToString());
                 double totalAmount = days * pricePerDay;
 
                 // Добавление записи в таблицу клиентов
@@ -110,7 +119,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 int clientId = Convert.ToInt32(cmdGetClientID.ExecuteScalar());
 
                 // Получение ID автомобиля
-                int carId = Convert.ToInt32(selectedRow.Cells["CarID"].Value);
+                int carId = Convert.ToInt32(selectedRow.Cells["ID автомобиля"].Value);
 
                 // Обновление статуса доступности автомобиля
                 string queryUpdateAvailability = "UPDATE Cars SET Availability='No' WHERE ID=@ID";
@@ -248,5 +257,9 @@ namespace АИС_салона_по_аренде_автомобилей
             this.Close();
         }
     }
-}    
+}
+
+
+
+
 

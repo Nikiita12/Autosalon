@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
@@ -40,32 +41,30 @@ namespace АИС_салона_по_аренде_автомобилей
             dataGridView4.SelectionChanged += dataGridView4_SelectionChanged;
             dataGridView5.SelectionChanged += dataGridView5_SelectionChanged;
             dataGridView6.SelectionChanged += dataGridView6_SelectionChanged;
+
             // Заполнение comboBox1 данными из таблицы specifications
             string query1 = "SELECT ID, Stamp || ' ' || Title AS Full FROM specifications";
             SQLiteDataAdapter da1 = new SQLiteDataAdapter(query1, connection);
             DataTable dt1 = new DataTable();
             da1.Fill(dt1);
-
             comboBox1.DataSource = dt1;
             comboBox1.DisplayMember = "Full"; // Отображаемое значение в комбобоксе
-            comboBox1.ValueMember = "ID";        // ID автомобиля
+            comboBox1.ValueMember = "ID";     // ID автомобиля
 
             // Заполнение comboBox2 данными из таблицы country
             string query2 = "SELECT ID, Country FROM country";
             SQLiteDataAdapter da2 = new SQLiteDataAdapter(query2, connection);
             DataTable dt2 = new DataTable();
             da2.Fill(dt2);
-
             comboBox2.DataSource = dt2;
             comboBox2.DisplayMember = "Country"; // Название страны
-            comboBox2.ValueMember = "ID";            // ID страны
+            comboBox2.ValueMember = "ID";        // ID страны
 
             // Заполнение comboBox3 данными из таблицы klients
             string query3 = "SELECT ID, Surname || ' ' || Name || ' ' || LastName AS FullName, Seria, Number FROM klients";
             SQLiteDataAdapter da3 = new SQLiteDataAdapter(query3, connection);
             DataTable dt3 = new DataTable();
             da3.Fill(dt3);
-
             comboBox3.DataSource = dt3;
             comboBox3.DisplayMember = "FullName";
             comboBox3.ValueMember = "ID";
@@ -75,70 +74,72 @@ namespace АИС_салона_по_аренде_автомобилей
             SQLiteDataAdapter da4 = new SQLiteDataAdapter(query4, connection);
             DataTable dt4 = new DataTable();
             da4.Fill(dt4);
-
             comboBox4.DataSource = dt4;
             comboBox4.DisplayMember = "FullName";
             comboBox4.ValueMember = "ID";
 
             // Заполнение comboBox5 данными из таблицы cars и specifications
             string query5 = @"
-SELECT 
-    cars.ID, 
-    specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль'
-FROM 
-    cars 
-JOIN 
-    specifications ON cars.ID_auto = specifications.ID";
+            SELECT 
+                cars.ID, 
+                specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль'
+            FROM 
+                cars 
+            JOIN 
+                specifications ON cars.ID_auto = specifications.ID";
             SQLiteDataAdapter da5 = new SQLiteDataAdapter(query5, connection);
             DataTable dt5 = new DataTable();
             da5.Fill(dt5);
-
             comboBox5.DataSource = dt5;
             comboBox5.DisplayMember = "Автомобиль";
             comboBox5.ValueMember = "ID";
 
             // Обработка события изменения выбранного клиента в comboBox3
-            comboBox6.SelectedIndexChanged += comboBox3_SelectedIndexChanged;
             comboBox6.Items.Clear();
-            comboBox6.Items.Add("Name");
-            comboBox6.Items.Add("Surname");
-            comboBox6.Items.Add("LastName");
-            comboBox6.Items.Add("Seria");
-            comboBox6.Items.Add("Number");
-            comboBox6.Items.Add("Telephone");
+            comboBox6.Items.Add("Имя");
+            comboBox6.Items.Add("Фамилия");
+            comboBox6.Items.Add("Отчество");
+            comboBox6.Items.Add("Серия");
+            comboBox6.Items.Add("Номер");
+            comboBox6.Items.Add("Телефон");
+            comboBox6.SelectedIndex = 0;
 
             comboBox7.Items.Clear();
-            comboBox7.Items.Add("Name");
-            comboBox7.Items.Add("Surname");
-            comboBox7.Items.Add("LastName");
-            comboBox7.Items.Add("Post");
-            comboBox7.Items.Add("Telephone");
-            comboBox7.Items.Add("Mail");
+            comboBox7.Items.Add("Имя");
+            comboBox7.Items.Add("Фамилия");
+            comboBox7.Items.Add("Отчество");
+            comboBox7.Items.Add("Должность");
+            comboBox7.Items.Add("Телефон");
+            comboBox7.Items.Add("Электронная почта");
+            comboBox7.SelectedIndex = 0;
 
             comboBox8.Items.Clear();
-            comboBox8.Items.Add("Stamp");
-            comboBox8.Items.Add("Title");
-            comboBox8.Items.Add("Color");
+            comboBox8.Items.Add("Марка");
+            comboBox8.Items.Add("Название");
+            comboBox8.Items.Add("Цвет");
+            comboBox8.SelectedIndex = 0;
 
             comboBox9.Items.Clear();
-            comboBox9.Items.Add("Stamp");
-            comboBox9.Items.Add("Title");
-            comboBox9.Items.Add("Color");
-            comboBox9.Items.Add("Price");
-            comboBox9.Items.Add("Availability");
-            comboBox9.Items.Add("Country");
+            comboBox9.Items.Add("Марка");
+            comboBox9.Items.Add("Название");
+            comboBox9.Items.Add("Цвет");
+            comboBox9.Items.Add("Цена");
+            comboBox9.Items.Add("Наличие");
+            comboBox9.Items.Add("Страна");
+            comboBox9.SelectedIndex = 0;
 
             comboBox10.Items.Clear();
-            comboBox10.Items.Add("Date");
-            comboBox10.Items.Add("Summa");
-            comboBox10.Items.Add("BeginArenda");
-            comboBox10.Items.Add("EndArenda");
+            comboBox10.Items.Add("Дата");
+            comboBox10.Items.Add("Сумма");
+            comboBox10.Items.Add("Начало аренды");
+            comboBox10.Items.Add("Конец аренды");
+            comboBox10.SelectedIndex = 0;
         }
 
         private void LoadKlientData()
         {
             connection.Open();
-            string query = "SELECT * FROM Klients";
+            string query = "SELECT ID, Surname AS 'Фамилия', Name AS 'Имя', LastName AS 'Отчество', Seria AS 'Серия', Number AS 'Номер', Telephone AS 'Телефон' FROM Klients";
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
@@ -152,10 +153,10 @@ JOIN
             string query = @"
         SELECT 
             cars.ID,
-            specifications.Title AS 'Автомобиль',
+            specifications.Title AS 'Название',
             specifications.Stamp AS 'Марка',
             country.Country AS 'Страна',
-            cars.price AS 'Цена',
+            cars.Price AS 'Цена',
             cars.Availability AS 'Наличие'
         FROM 
             cars
@@ -174,23 +175,25 @@ JOIN
         {
             connection.Open();
             string query = @"
-        SELECT 
-            contract.ID,
-            klients.Surname || ' ' || klients.Name || ' ' || klients.LastName AS 'Клиент',
-            personal.Surname || ' ' || personal.Name || ' ' || personal.LastName AS 'Персонал',
-            specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль',
-            contract.Date,
-            contract.summa
-        FROM 
-            contract
-        LEFT JOIN 
-            klients ON contract.ID_klient = klients.ID
-        LEFT JOIN 
-            personal ON contract.ID_personal = personal.ID
-        LEFT JOIN 
-            cars ON contract.ID_car = cars.ID
-        LEFT JOIN 
-            specifications ON cars.ID_auto = specifications.ID";
+            SELECT 
+                contract.ID,
+                klients.Surname || ' ' || klients.Name || ' ' || klients.LastName AS 'Клиент',
+                personal.Surname || ' ' || personal.Name || ' ' || personal.LastName AS 'Персонал',
+                specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль',
+                contract.Date AS 'Дата',
+                contract.Summa AS 'Сумма',
+                contract.BeginArenda AS 'Начало аренды',
+                contract.EndArenda AS 'Конец аренды'
+            FROM 
+                contract
+            LEFT JOIN 
+                klients ON contract.ID_klient = klients.ID
+            LEFT JOIN 
+                personal ON contract.ID_personal = personal.ID
+            LEFT JOIN 
+                cars ON contract.ID_car = cars.ID
+            LEFT JOIN 
+                specifications ON cars.ID_auto = specifications.ID";
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
@@ -201,7 +204,7 @@ JOIN
         private void LoadPersonalData()
         {
             connection.Open();
-            string query = "SELECT * FROM Personal";
+            string query = "SELECT ID, Surname AS 'Фамилия', Name AS 'Имя', LastName AS 'Отчество', Post AS 'Должность', Telephone AS 'Телефон', Mail AS 'Электронная почта' FROM Personal";
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
@@ -212,7 +215,7 @@ JOIN
         private void LoadCountryData()
         {
             connection.Open();
-            string query = "SELECT * FROM Country";
+            string query = "SELECT ID, Country AS 'Страна' FROM Country";
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
@@ -223,7 +226,7 @@ JOIN
         private void LoadSpecificationsData()
         {
             connection.Open();
-            string query = "SELECT * FROM Specifications";
+            string query = "SELECT ID, Stamp AS 'Марка', Title AS 'Название', Color AS 'Цвет' FROM Specifications";
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
@@ -252,7 +255,7 @@ JOIN
             if (dataGridView1.SelectedRows.Count > 0)
             {
                 string clientId = dataGridView1.SelectedRows[0].Cells["ID"].Value.ToString();
-                string query = "UPDATE Klients SET Surname=@Surname, Name=@Name, LastName=@LastName, Seria=@Seria, Number=@Number, Telephone=@Telephone";
+                string query = "UPDATE Klients SET Surname=@Surname, Name=@Name, LastName=@LastName, Seria=@Seria, Number=@Number, Telephone=@Telephone WHERE ID=@ID";
                 SQLiteCommand cmd = new SQLiteCommand(query, connection);
                 cmd.Parameters.AddWithValue("@ID", clientId);
                 cmd.Parameters.AddWithValue("@Surname", textBox2.Text);
@@ -276,20 +279,20 @@ JOIN
         {
             if (dataGridView1.SelectedRows.Count > 0)
             {
-                string clientId = dataGridView1.SelectedRows[0].Cells["ID"].Value.ToString(); 
-                string query = "DELETE FROM Klients WHERE ID=@Id"; 
-                SQLiteCommand cmd = new SQLiteCommand(query, connection); 
-                cmd.Parameters.AddWithValue("@Id", clientId); 
-                connection.Open(); 
-                cmd.ExecuteNonQuery(); // Пересчет ID
-                SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Klients SET ID = (SELECT COUNT(*) FROM Klients k2 WHERE k2.ID < Klients.ID) + 1", connection); 
-                reorderCmd.ExecuteNonQuery(); 
-                connection.Close(); 
-                LoadKlientData(); 
-            } 
-            else 
-            { 
-                MessageBox.Show("Пожалуйста, выберите клиента для удаления."); 
+                string clientId = dataGridView1.SelectedRows[0].Cells["ID"].Value.ToString();
+                string query = "DELETE FROM Klients WHERE ID=@ID";
+                SQLiteCommand cmd = new SQLiteCommand(query, connection);
+                cmd.Parameters.AddWithValue("@ID", clientId);
+                connection.Open();
+                cmd.ExecuteNonQuery();
+                SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Klients SET ID = (SELECT COUNT(*) FROM Klients k2 WHERE k2.ID < Klients.ID) + 1", connection);
+                reorderCmd.ExecuteNonQuery();
+                connection.Close();
+                LoadKlientData();
+            }
+            else
+            {
+                MessageBox.Show("Пожалуйста, выберите клиента для удаления.");
             }
         }
 
@@ -333,22 +336,22 @@ JOIN
         private void button8_Click(object sender, EventArgs e)
         {
             if (dataGridView2.SelectedRows.Count > 0)
-            {
-                string carId = dataGridView2.SelectedRows[0].Cells["ID"].Value.ToString(); 
-                string query = "DELETE FROM cars WHERE ID=@Id";
-                SQLiteCommand cmd = new SQLiteCommand(query, connection); 
-                cmd.Parameters.AddWithValue("@Id", carId); 
-                connection.Open();
-                cmd.ExecuteNonQuery(); // Пересчет ID
-                SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE cars SET ID = (SELECT COUNT(*) FROM cars c2 WHERE c2.ID < cars.ID) + 1", connection); 
-                reorderCmd.ExecuteNonQuery(); 
-                connection.Close(); 
-                LoadAutomobileData(); 
-            } 
-            else 
-            {
-                MessageBox.Show("Пожалуйста, выберите машину для удаления."); 
-            }
+        {
+            string carId = dataGridView2.SelectedRows[0].Cells["ID"].Value.ToString();
+            string query = "DELETE FROM cars WHERE ID=@ID";
+            SQLiteCommand cmd = new SQLiteCommand(query, connection);
+            cmd.Parameters.AddWithValue("@ID", carId);
+            connection.Open();
+            cmd.ExecuteNonQuery(); // Пересчет ID
+            SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE cars SET ID = (SELECT COUNT(*) FROM cars c2 WHERE c2.ID < cars.ID) + 1", connection);
+            reorderCmd.ExecuteNonQuery();
+            connection.Close();
+            LoadAutomobileData();
+        }
+        else
+        {
+            MessageBox.Show("Пожалуйста, выберите машину для удаления.");
+        }
         }
 
         private void button13_Click(object sender, EventArgs e)
@@ -372,7 +375,7 @@ JOIN
             if (dataGridView4.SelectedRows.Count > 0)
             {
                 string personalId = dataGridView4.SelectedRows[0].Cells["ID"].Value.ToString();
-                string query = "UPDATE Personal SET Surname=@Surname, Name=@Name, LastName=@LastName, Post=@Post, Telephone=@Telephone, Mail=@Mail";
+                string query = "UPDATE Personal SET Surname=@Surname, Name=@Name, LastName=@LastName, Post=@Post, Telephone=@Telephone, Mail=@Mail WHERE ID=@ID";
                 SQLiteCommand cmd = new SQLiteCommand(query, connection);
                 cmd.Parameters.AddWithValue("@ID", personalId);
                 cmd.Parameters.AddWithValue("@Surname", textBox24.Text);
@@ -397,11 +400,11 @@ JOIN
             if (dataGridView4.SelectedRows.Count > 0)
             {
                 string clientId = dataGridView4.SelectedRows[0].Cells["ID"].Value.ToString();
-                string query = "DELETE FROM Personal WHERE ID=@Id";
+                string query = "DELETE FROM Personal WHERE ID=@ID";
                 SQLiteCommand cmd = new SQLiteCommand(query, connection);
-                cmd.Parameters.AddWithValue("@Id", clientId);
+                cmd.Parameters.AddWithValue("@ID", clientId);
                 connection.Open();
-                cmd.ExecuteNonQuery(); // Пересчет ID
+                cmd.ExecuteNonQuery();
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Personal SET ID = (SELECT COUNT(*) FROM Personal p2 WHERE p2.ID < Personal.ID) + 1", connection);
                 reorderCmd.ExecuteNonQuery();
                 connection.Close();
@@ -431,7 +434,7 @@ JOIN
             if (dataGridView5.SelectedRows.Count > 0)
             {
                 string SpId = dataGridView5.SelectedRows[0].Cells["ID"].Value.ToString();
-                string query = "UPDATE Specifications SET Stamp=@Stamp, Title=@Title, Color=@Color";
+                string query = "UPDATE Specifications SET Stamp=@Stamp, Title=@Title, Color=@Color WHERE ID=@ID";
                 SQLiteCommand cmd = new SQLiteCommand(query, connection);
                 cmd.Parameters.AddWithValue("@ID", SpId);
                 cmd.Parameters.AddWithValue("@Stamp", textBox31.Text);
@@ -453,9 +456,9 @@ JOIN
             if (dataGridView5.SelectedRows.Count > 0)
             {
                 string SpId = dataGridView5.SelectedRows[0].Cells["ID"].Value.ToString();
-                string query = "DELETE FROM Specifications WHERE ID=@Id";
+                string query = "DELETE FROM Specifications WHERE ID=@ID";
                 SQLiteCommand cmd = new SQLiteCommand(query, connection);
-                cmd.Parameters.AddWithValue("@Id", SpId);
+                cmd.Parameters.AddWithValue("@ID", SpId);
                 connection.Open();
                 cmd.ExecuteNonQuery(); // Пересчет ID
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Specifications SET ID = (SELECT COUNT(*) FROM Specifications s2 WHERE s2.ID < Specifications.ID) + 1", connection);
@@ -485,7 +488,7 @@ JOIN
             if (dataGridView6.SelectedRows.Count > 0)
             {
                 string CoId = dataGridView6.SelectedRows[0].Cells["ID"].Value.ToString();
-                string query = "UPDATE Country SET Country=@Country";
+                string query = "UPDATE Country SET Country=@Country WHERE ID=@ID";
                 SQLiteCommand cmd = new SQLiteCommand(query, connection);
                 cmd.Parameters.AddWithValue("@ID", CoId);
                 cmd.Parameters.AddWithValue("@Country", textBox35.Text);
@@ -505,9 +508,9 @@ JOIN
             if (dataGridView6.SelectedRows.Count > 0)
             {
                 string CoId = dataGridView6.SelectedRows[0].Cells["ID"].Value.ToString();
-                string query = "DELETE FROM Country WHERE ID=@Id";
+                string query = "DELETE FROM Country WHERE ID=@ID";
                 SQLiteCommand cmd = new SQLiteCommand(query, connection);
-                cmd.Parameters.AddWithValue("@Id", CoId);
+                cmd.Parameters.AddWithValue("@ID", CoId);
                 connection.Open();
                 cmd.ExecuteNonQuery(); // Пересчет ID
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Country SET ID = (SELECT COUNT(*) FROM Country c2 WHERE c2.ID < Country.ID) + 1", connection);
@@ -561,7 +564,7 @@ JOIN
                 cmd.Parameters.AddWithValue("@Date", textBox19.Text);
                 cmd.Parameters.AddWithValue("@Summa", textBox18.Text);
                 cmd.Parameters.AddWithValue("@SeriaKlient", textBox17.Text);
-                cmd.Parameters.AddWithValue("@Numberklients", textBox20.Text);
+                cmd.Parameters.AddWithValue("@NumberKlient", textBox20.Text);
                 cmd.Parameters.AddWithValue("@BeginArenda", textBox21.Text);
                 cmd.Parameters.AddWithValue("@EndArenda", textBox22.Text);
                 connection.Open();
@@ -579,20 +582,20 @@ JOIN
         {
             if (dataGridView3.SelectedRows.Count > 0)
             {
-                string contractId = dataGridView3.SelectedRows[0].Cells["ID"].Value.ToString(); 
-                string query = "DELETE FROM contract WHERE ID=@Id";
-                SQLiteCommand cmd = new SQLiteCommand(query, connection); 
-                cmd.Parameters.AddWithValue("@Id", contractId); 
-                connection.Open(); 
+                string contractId = dataGridView3.SelectedRows[0].Cells["ID"].Value.ToString();
+                string query = "DELETE FROM contract WHERE ID=@ID";
+                SQLiteCommand cmd = new SQLiteCommand(query, connection);
+                cmd.Parameters.AddWithValue("@ID", contractId);
+                connection.Open();
                 cmd.ExecuteNonQuery(); // Пересчет ID
-                SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE contract SET ID = (SELECT COUNT(*) FROM contract c2 WHERE c2.ID < contract.ID) + 1", connection); 
-                reorderCmd.ExecuteNonQuery(); 
-                connection.Close(); 
-                LoadContractData(); 
-            } 
-            else 
-            { 
-                MessageBox.Show("Пожалуйста, выберите контракт для удаления."); 
+                SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE contract SET ID = (SELECT COUNT(*) FROM contract c2 WHERE c2.ID < contract.ID) + 1", connection);
+                reorderCmd.ExecuteNonQuery();
+                connection.Close();
+                LoadContractData();
+            }
+            else
+            {
+                MessageBox.Show("Пожалуйста, выберите контракт для удаления.");
             }
         }
 
@@ -601,15 +604,13 @@ JOIN
             string query;
             if (string.IsNullOrEmpty(textBox1.Text))
             {
-                // Если поле поиска пустое, загрузить все данные
-                query = "SELECT * FROM Klients";
+                query = "SELECT ID, Surname AS 'Фамилия', Name AS 'Имя', LastName AS 'Отчество', Seria AS 'Серия', Number AS 'Номер', Telephone AS 'Телефон' FROM Klients";
             }
             else
             {
-                //Поиск по выбранному критерию
                 string selectedField = comboBox6.SelectedItem.ToString();
                 string searchText = textBox1.Text;
-                query = $"SELECT * FROM Klients WHERE {selectedField} LIKE '%{searchText}%'";
+                query = $"SELECT ID, Surname AS 'Фамилия', Name AS 'Имя', LastName AS 'Отчество', Seria AS 'Серия', Number AS 'Номер', Telephone AS 'Телефон' FROM Klients WHERE [{selectedField}] LIKE '%{searchText}%'";
             }
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
@@ -622,15 +623,13 @@ JOIN
             string query;
             if (string.IsNullOrEmpty(textBox8.Text))
             {
-                // Если поле поиска пустое, загрузить все данные
-                query = "SELECT * FROM Personal";
+                query = "SELECT ID, Surname AS 'Фамилия', Name AS 'Имя', LastName AS 'Отчество', Post AS 'Должность', Telephone AS 'Телефон', Mail AS 'Электронная почта' FROM Personal";
             }
             else
             {
-                //Поиск по выбранному критерию
                 string selectedField = comboBox7.SelectedItem.ToString();
                 string searchText = textBox8.Text;
-                query = $"SELECT * FROM Personal WHERE {selectedField} LIKE '%{searchText}%'";
+                query = $"SELECT ID, Surname AS 'Фамилия', Name AS 'Имя', LastName AS 'Отчество', Post AS 'Должность', Telephone AS 'Телефон', Mail AS 'Электронная почта' FROM Personal WHERE [{selectedField}] LIKE '%{searchText}%'";
             }
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
@@ -643,15 +642,13 @@ JOIN
             string query;
             if (string.IsNullOrEmpty(textBox9.Text))
             {
-                // Если поле поиска пустое, загрузить все данные
-                query = "SELECT * FROM Specifications";
+                query = "SELECT ID, Stamp AS 'Марка', Title AS 'Название', Color AS 'Цвет' FROM Specifications";
             }
             else
             {
-                //Поиск по выбранному критерию
                 string selectedField = comboBox8.SelectedItem.ToString();
                 string searchText = textBox9.Text;
-                query = $"SELECT * FROM Specifications WHERE {selectedField} LIKE '%{searchText}%'";
+                query = $"SELECT ID, Stamp AS 'Марка', Title AS 'Название', Color AS 'Цвет' FROM Specifications WHERE [{selectedField}] LIKE '%{searchText}%'";
             }
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
@@ -667,33 +664,41 @@ JOIN
                 // Если поле поиска пустое, загрузить все данные
                 query = @"
             SELECT 
-            cars.ID,
-            specifications.Title AS 'Автомобиль',
-            specifications.Stamp AS 'Марка',
-            country.Country AS 'Страна',
-            cars.price AS 'Цена',
-            cars.Availability AS 'Наличие'
-        FROM 
-            cars
-        JOIN 
-            specifications ON cars.ID_auto = specifications.ID
-        JOIN 
-            country ON cars.ID_country = country.ID";
+                cars.ID,
+                specifications.Title AS 'Название',
+                specifications.Stamp AS 'Марка',
+                country.Country AS 'Страна',
+                cars.Price AS 'Цена',
+                cars.Availability AS 'Наличие'
+            FROM 
+                cars
+            JOIN 
+                specifications ON cars.ID_auto = specifications.ID
+            JOIN 
+                country ON cars.ID_country = country.ID";
             }
             else
             {
-                //Поиск по выбранному критерию
+                // Поиск по выбранному критерию
                 string selectedField = comboBox9.SelectedItem.ToString();
                 string searchText = textBox10.Text;
                 query = $@"
             SELECT 
-                s.Stamp, s.Title, s.Color,
-                c.Price, c.Availability,
-                co.Country
-            FROM cars c
-            INNER JOIN Specifications s ON c.ID_auto = s.ID
-            INNER JOIN country co ON c.ID_country = co.ID
-            WHERE s.{selectedField} LIKE '%{searchText}%'";
+                cars.ID,
+                specifications.Title AS 'Название',
+                specifications.Stamp AS 'Марка',
+                specifications.Color AS 'Цвет',
+                cars.Price AS 'Цена',
+                cars.Availability AS 'Наличие',
+                country.Country AS 'Страна'
+            FROM 
+                cars
+            JOIN 
+                specifications ON cars.ID_auto = specifications.ID
+            JOIN 
+                country ON cars.ID_country = country.ID
+            WHERE 
+                {selectedField} LIKE '%{searchText}%'";
             }
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
@@ -708,13 +713,15 @@ JOIN
             {
                 // Если поле поиска пустое, загрузить все данные
                 query = @"
-            SELECT 
+        SELECT 
             contract.ID,
             klients.Surname || ' ' || klients.Name || ' ' || klients.LastName AS 'Клиент',
             personal.Surname || ' ' || personal.Name || ' ' || personal.LastName AS 'Персонал',
             specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль',
-            contract.Date,
-            contract.summa
+            contract.Date AS 'Дата',
+            contract.Summa AS 'Сумма',
+            contract.BeginArenda AS 'Начало аренды',
+            contract.EndArenda AS 'Конец аренды'
         FROM 
             contract
         LEFT JOIN 
@@ -728,19 +735,30 @@ JOIN
             }
             else
             {
-                //Поиск по выбранному критерию
+                // Поиск по выбранному критерию
                 string selectedField = comboBox10.SelectedItem.ToString();
                 string searchText = textBox13.Text;
                 query = $@"
-            SELECT
-                k.Surname AS ClientSurname, k.Name AS ClientName, k.LastName AS ClientLast,
-                p.Surname AS PersonalSurname, p.Name AS PersonalName, p.LastName AS PersonalLast,
-                a.Stamp, a.Title, a.color, c.Date, c.Summa
-            FROM contract c
-            INNER JOIN klients k ON c.ID_klient = k.ID
-            INNER JOIN personal p ON c.ID_personal = p.ID
-            INNER JOIN specifications a ON c.ID_car = a.ID
-            WHERE {selectedField} LIKE '%{searchText}%'";
+        SELECT 
+            contract.ID,
+            klients.Surname || ' ' || klients.Name || ' ' || klients.LastName AS 'Клиент',
+            personal.Surname || ' ' || personal.Name || ' ' || personal.LastName AS 'Персонал',
+            specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль',
+            contract.Date AS 'Дата',
+            contract.Summa AS 'Сумма',
+            contract.BeginArenda AS 'Начало аренды',
+            contract.EndArenda AS 'Конец аренды'
+        FROM 
+            contract
+        LEFT JOIN 
+            klients ON contract.ID_klient = klients.ID
+        LEFT JOIN 
+            personal ON contract.ID_personal = personal.ID
+        LEFT JOIN 
+            cars ON contract.ID_car = cars.ID
+        LEFT JOIN 
+            specifications ON cars.ID_auto = specifications.ID
+        WHERE {selectedField} LIKE '%{searchText}%'";
             }
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
@@ -753,12 +771,12 @@ JOIN
             if (dataGridView1.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridView1.SelectedRows[0];
-                textBox2.Text = selectedRow.Cells["Surname"].Value.ToString();
-                textBox3.Text = selectedRow.Cells["Name"].Value.ToString();
-                textBox4.Text = selectedRow.Cells["LastName"].Value.ToString();
-                textBox5.Text = selectedRow.Cells["Seria"].Value.ToString();
-                textBox6.Text = selectedRow.Cells["Number"].Value.ToString();
-                textBox7.Text = selectedRow.Cells["Telephone"].Value.ToString();
+                textBox2.Text = selectedRow.Cells["Фамилия"].Value.ToString();
+                textBox3.Text = selectedRow.Cells["Имя"].Value.ToString();
+                textBox4.Text = selectedRow.Cells["Отчество"].Value.ToString();
+                textBox5.Text = selectedRow.Cells["Серия"].Value.ToString();
+                textBox6.Text = selectedRow.Cells["Номер"].Value.ToString();
+                textBox7.Text = selectedRow.Cells["Телефон"].Value.ToString();
             }
         }
 
@@ -767,12 +785,12 @@ JOIN
             if (dataGridView4.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridView4.SelectedRows[0];
-                textBox24.Text = selectedRow.Cells["Surname"].Value.ToString();
-                textBox25.Text = selectedRow.Cells["Name"].Value.ToString();
-                textBox26.Text = selectedRow.Cells["LastName"].Value.ToString();
-                textBox27.Text = selectedRow.Cells["Post"].Value.ToString();
-                textBox28.Text = selectedRow.Cells["Telephone"].Value.ToString();
-                textBox29.Text = selectedRow.Cells["Mail"].Value.ToString();
+                textBox24.Text = selectedRow.Cells["Фамилия"].Value.ToString();
+                textBox25.Text = selectedRow.Cells["Имя"].Value.ToString();
+                textBox26.Text = selectedRow.Cells["Отчество"].Value.ToString();
+                textBox27.Text = selectedRow.Cells["Должность"].Value.ToString();
+                textBox28.Text = selectedRow.Cells["Телефон"].Value.ToString();
+                textBox29.Text = selectedRow.Cells["Электронная почта"].Value.ToString();
             }
         }
 
@@ -781,9 +799,9 @@ JOIN
             if (dataGridView5.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridView5.SelectedRows[0];
-                textBox31.Text = selectedRow.Cells["Stamp"].Value.ToString();
-                textBox32.Text = selectedRow.Cells["Title"].Value.ToString();
-                textBox33.Text = selectedRow.Cells["Color"].Value.ToString();
+                textBox31.Text = selectedRow.Cells["Марка"].Value.ToString();
+                textBox32.Text = selectedRow.Cells["Название"].Value.ToString();
+                textBox33.Text = selectedRow.Cells["Цвет"].Value.ToString();
             }
         }
 
@@ -792,29 +810,25 @@ JOIN
             if (dataGridView6.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridView6.SelectedRows[0];
-                textBox35.Text = selectedRow.Cells["Country"].Value.ToString();
+                textBox35.Text = selectedRow.Cells["Страна"].Value.ToString();
             }
         }
 
         private void dataGridView2_SelectionChanged(object sender, EventArgs e)
         {
-            // Проверяем, есть ли выбранные строки в DataGridView
             if (dataGridView2.SelectedRows.Count > 0)
             {
                 DataGridViewRow selectedRow = dataGridView2.SelectedRows[0];
 
-                // Заполняем текстовые поля данными из выбранной строки
                 textBox11.Text = selectedRow.Cells["Цена"].Value?.ToString() ?? "";
                 textBox12.Text = selectedRow.Cells["Наличие"].Value?.ToString() ?? "";
 
-                // Формируем строку для ComboBox1 (Марка + Автомобиль)
                 string selectedStamp = selectedRow.Cells["Марка"].Value?.ToString() ?? "";
-                string selectedTitle = selectedRow.Cells["Автомобиль"].Value?.ToString() ?? "";
+                string selectedTitle = selectedRow.Cells["Название"].Value?.ToString() ?? "";
                 string selectedAuto = !string.IsNullOrEmpty(selectedStamp) && !string.IsNullOrEmpty(selectedTitle)
                     ? $"{selectedStamp} {selectedTitle}"
                     : "";
 
-                // Устанавливаем значение в ComboBox1
                 if (!string.IsNullOrEmpty(selectedAuto))
                 {
                     for (int i = 0; i < comboBox1.Items.Count; i++)
@@ -828,7 +842,6 @@ JOIN
                     }
                 }
 
-                // Устанавливаем значение в ComboBox2 по стране
                 string selectedCountry = selectedRow.Cells["Страна"].Value?.ToString() ?? "";
                 if (!string.IsNullOrEmpty(selectedCountry))
                 {
@@ -849,31 +862,30 @@ JOIN
         {
             if (dataGridView3.SelectedRows.Count > 0)
             {
-                // Заполняем dataGridView7
                 string query = @"
-SELECT 
-    Contract.ID,
-    COALESCE(klients.Surname || ' ' || klients.Name || ' ' || klients.LastName, '') AS Клиент,
-    COALESCE(personal.Surname || ' ' || personal.Name || ' ' || personal.LastName, '') AS Персонал,
-    COALESCE(specifications.Stamp, '') || ' ' || COALESCE(specifications.Title, '') AS Автомобиль,
-    Contract.Date,
-    Contract.Summa,
-    Contract.SeriaKlient,
-    Contract.NumberKlient,
-    Contract.BeginArenda,
-    Contract.EndArenda
-FROM 
-    Contract
-LEFT JOIN 
-    klients ON Contract.ID_klient = klients.ID
-LEFT JOIN
-    personal ON Contract.ID_personal = personal.ID  
-LEFT JOIN
-    cars ON Contract.ID_car = cars.ID
-LEFT JOIN
-    specifications ON cars.ID_auto = specifications.ID
-WHERE 
-    Contract.ID = @contractID";
+        SELECT 
+            Contract.ID,
+            COALESCE(klients.Surname || ' ' || klients.Name || ' ' || klients.LastName, '') AS Клиент,
+            COALESCE(personal.Surname || ' ' || personal.Name || ' ' || personal.LastName, '') AS Персонал,
+            COALESCE(specifications.Stamp, '') || ' ' || COALESCE(specifications.Title, '') AS Автомобиль,
+            Contract.Date,
+            Contract.Summa,
+            Contract.SeriaKlient,
+            Contract.NumberKlient,
+            Contract.BeginArenda,
+            Contract.EndArenda
+        FROM 
+            Contract
+        LEFT JOIN 
+            klients ON Contract.ID_klient = klients.ID
+        LEFT JOIN
+            personal ON Contract.ID_personal = personal.ID  
+        LEFT JOIN
+            cars ON Contract.ID_car = cars.ID
+        LEFT JOIN
+            specifications ON cars.ID_auto = specifications.ID
+        WHERE 
+            Contract.ID = @contractID";
 
                 SQLiteDataAdapter da = new SQLiteDataAdapter(query, connection);
                 da.SelectCommand.Parameters.AddWithValue("@contractID", dataGridView3.SelectedRows[0].Cells["ID"].Value);
@@ -881,7 +893,6 @@ WHERE
                 da.Fill(dt);
                 dataGridView7.DataSource = dt;
 
-                // Заполняем текстовые поля и текстбоксы из dataGridView7
                 textBox17.Text = dataGridView7.Rows[0].Cells["SeriaKlient"].Value?.ToString() ?? "";
                 textBox20.Text = dataGridView7.Rows[0].Cells["NumberKlient"].Value?.ToString() ?? "";
                 textBox21.Text = dataGridView7.Rows[0].Cells["BeginArenda"].Value?.ToString() ?? "";
@@ -889,36 +900,33 @@ WHERE
                 textBox18.Text = dataGridView7.Rows[0].Cells["Summa"].Value?.ToString() ?? "";
                 textBox19.Text = dataGridView7.Rows[0].Cells["Date"].Value?.ToString() ?? "";
 
-                // Заполняем ComboBox3 значением ФИО клиента
                 string clientFullName = dataGridView7.Rows[0].Cells["Клиент"].Value?.ToString() ?? "";
                 for (int i = 0; i < comboBox3.Items.Count; i++)
                 {
-                    string itemFullName = comboBox3.Items[i].ToString();
-                    if (itemFullName == clientFullName)
+                    DataRowView item = (DataRowView)comboBox3.Items[i];
+                    if (item["FullName"].ToString() == clientFullName)
                     {
                         comboBox3.SelectedIndex = i;
                         break;
                     }
                 }
 
-                // Заполняем ComboBox4 значением ФИО сотрудника
                 string personalFullName = dataGridView7.Rows[0].Cells["Персонал"].Value?.ToString() ?? "";
                 for (int i = 0; i < comboBox4.Items.Count; i++)
                 {
-                    string itemFullName = comboBox4.Items[i].ToString();
-                    if (itemFullName == personalFullName)
+                    DataRowView item = (DataRowView)comboBox4.Items[i];
+                    if (item["FullName"].ToString() == personalFullName)
                     {
                         comboBox4.SelectedIndex = i;
                         break;
                     }
                 }
 
-                // Заполняем ComboBox5 значением Автомобиля
                 string autoFullName = dataGridView7.Rows[0].Cells["Автомобиль"].Value?.ToString() ?? "";
                 for (int i = 0; i < comboBox5.Items.Count; i++)
                 {
-                    string itemFullName = comboBox5.Items[i].ToString();
-                    if (itemFullName == autoFullName)
+                    DataRowView item = (DataRowView)comboBox5.Items[i];
+                    if (item["Автомобиль"].ToString() == autoFullName)
                     {
                         comboBox5.SelectedIndex = i;
                         break;
@@ -958,3 +966,27 @@ WHERE
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
