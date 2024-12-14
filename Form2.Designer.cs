@@ -49,6 +49,9 @@
             this.label8 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.button3 = new System.Windows.Forms.Button();
+            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -58,7 +61,7 @@
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowTemplate.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(896, 319);
+            this.dataGridView1.Size = new System.Drawing.Size(865, 311);
             this.dataGridView1.TabIndex = 0;
             // 
             // button1
@@ -185,7 +188,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(912, 141);
+            this.button2.Location = new System.Drawing.Point(894, 141);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(197, 59);
             this.button2.TabIndex = 16;
@@ -195,7 +198,7 @@
             // 
             // textBox8
             // 
-            this.textBox8.Location = new System.Drawing.Point(912, 101);
+            this.textBox8.Location = new System.Drawing.Point(894, 92);
             this.textBox8.Name = "textBox8";
             this.textBox8.Size = new System.Drawing.Size(197, 20);
             this.textBox8.TabIndex = 17;
@@ -203,7 +206,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(937, 38);
+            this.label8.Location = new System.Drawing.Point(921, 40);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(140, 13);
             this.label8.TabIndex = 18;
@@ -212,7 +215,7 @@
             // comboBox1
             // 
             this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(912, 65);
+            this.comboBox1.Location = new System.Drawing.Point(894, 65);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(197, 21);
             this.comboBox1.TabIndex = 19;
@@ -228,11 +231,40 @@
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
+            // comboBox2
+            // 
+            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.Location = new System.Drawing.Point(694, 360);
+            this.comboBox2.Name = "comboBox2";
+            this.comboBox2.Size = new System.Drawing.Size(161, 21);
+            this.comboBox2.TabIndex = 21;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(737, 345);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(60, 13);
+            this.label9.TabIndex = 22;
+            this.label9.Text = "Сотрудник";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(872, 203);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(237, 13);
+            this.label10.TabIndex = 23;
+            this.label10.Text = "Для сброса очистите поле и нажмите кнопку";
+            // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1121, 581);
+            this.Controls.Add(this.label10);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.comboBox2);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.label8);
@@ -285,5 +317,8 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
     }
 }

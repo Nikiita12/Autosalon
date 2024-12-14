@@ -22,7 +22,7 @@ namespace АИС_салона_по_аренде_автомобилей
         public Form2()
         {
             InitializeComponent();
-            connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;");
+            connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;");
             LoadAutomobileData();
             textBox1.Validating += textBox1_Validating;
             textBox2.Validating += textBox2_Validating;
@@ -40,40 +40,43 @@ namespace АИС_салона_по_аренде_автомобилей
             comboBox1.Items.Add("Цвет");
             comboBox1.Items.Add("Доступность");
             comboBox1.SelectedIndex = 0; // Устанавливаем "Название" в качестве выбранного параметра по умолчаниюию
+
+            // Заполнение comboBox4 данными из таблицы personal
+            string query4 = "SELECT ID, Surname || ' ' || Name || ' ' || LastName AS FullName FROM personal";
+            SQLiteDataAdapter da4 = new SQLiteDataAdapter(query4, connection);
+            DataTable dt4 = new DataTable();
+            da4.Fill(dt4);
+            comboBox2.DataSource = dt4;
+            comboBox2.DisplayMember = "FullName";
+            comboBox2.ValueMember = "ID";
         }
 
-        private void LoadAutomobileData(string searchTerm = "", string searchColumn = "Title")
+        private void LoadAutomobileData()
         {
             connection.Open();
-            string query = "SELECT s.ID AS 'ID автомобиля', s.Stamp AS 'Марка', s.Title AS 'Название', s.Color AS 'Цвет', co.Country AS 'Страна', c.Price AS 'Цена', c.Availability AS 'Доступность' FROM Specifications s JOIN Cars c ON s.ID = c.ID_auto JOIN Country co ON c.ID_country = co.ID";
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                switch (searchColumn)
-                {
-                    case "Название":
-                        query += $" WHERE s.Title LIKE '%{searchTerm}%'";
-                        break;
-                    case "Цена":
-                        query += $" WHERE c.Price = {searchTerm}";
-                        break;
-                    case "Страна":
-                        query += $" WHERE co.Country LIKE '%{searchTerm}%'";
-                        break;
-                    case "Марка":
-                        query += $" WHERE s.Stamp LIKE '%{searchTerm}%'";
-                        break;
-                    case "Цвет":
-                        query += $" WHERE s.Color LIKE '%{searchTerm}%'";
-                        break;
-                    case "Доступность":
-                        query += $" WHERE c.Availability LIKE '%{searchTerm}%'";
-                        break;
-                }
-            }
+            string query = @"
+        SELECT 
+            c.ID AS 'ID', 
+            s.Stamp AS 'Марка', 
+            s.Title AS 'Название', 
+            s.Color AS 'Цвет', 
+            co.Country AS 'Страна', 
+            c.Price AS 'Цена', 
+            c.Availability AS 'Доступность'
+        FROM 
+            Specifications s 
+        JOIN 
+            Cars c ON s.ID = c.ID_auto 
+        JOIN 
+            Country co ON c.ID_country = co.ID";
+
             adapter = new SQLiteDataAdapter(query, connection);
-            DataTable dt = new DataTable();
+            dt = new DataTable(); // Здесь сохраняем результаты во 'dt'
             adapter.Fill(dt);
+
+            // Заполнение DataGridView
             dataGridView1.DataSource = dt;
+            dataGridView1.Columns["ID"].Visible = false; // Скрываем колонку ID, если она есть
             connection.Close();
         }
 
@@ -100,6 +103,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 int days = int.Parse(textBox7.Text);
                 double pricePerDay = double.Parse(selectedRow.Cells["Цена"].Value.ToString());
                 double totalAmount = days * pricePerDay;
+                string selectedComboValue = comboBox2.SelectedItem.ToString();
 
                 // Добавление записи в таблицу клиентов
                 string queryClient = "INSERT INTO Klients (Surname, Name, LastName, Seria, Number, Telephone) VALUES (@Surname, @Name, @LastName, @Seria, @Number, @Telephone)";
@@ -118,8 +122,11 @@ namespace АИС_салона_по_аренде_автомобилей
                 SQLiteCommand cmdGetClientID = new SQLiteCommand(queryGetClientID, connection);
                 int clientId = Convert.ToInt32(cmdGetClientID.ExecuteScalar());
 
+                // Получаем ID сотрудника из комбобокса
+                int employeeId = Convert.ToInt32(comboBox2.SelectedValue);
+
                 // Получение ID автомобиля
-                int carId = Convert.ToInt32(selectedRow.Cells["ID автомобиля"].Value);
+                int carId = Convert.ToInt32(selectedRow.Cells["ID"].Value);
 
                 // Обновление статуса доступности автомобиля
                 string queryUpdateAvailability = "UPDATE Cars SET Availability='No' WHERE ID=@ID";
@@ -134,9 +141,10 @@ namespace АИС_салона_по_аренде_автомобилей
                 string endArenda = now.AddDays(days).ToString("dd.MM.yyyy HH:mm");
 
                 // Добавление записи в таблицу контрактов
-                string queryContract = "INSERT INTO Contract (ID_Klient, ID_Car, Summa, Date, BeginArenda, EndArenda, SeriaKlient, NumberKlient) VALUES (@ID_Klient, @ID_Car, @Summa, @Date, @BeginArenda, @EndArenda, @Seria_Client, @Number_Client)";
+                string queryContract = "INSERT INTO Contract (ID_Klient, ID_Personal, ID_Car, Summa, Date, BeginArenda, EndArenda, SeriaKlient, NumberKlient) VALUES (@ID_Klient, @ID_Personal, @ID_Car, @Summa, @Date, @BeginArenda, @EndArenda, @Seria_Client, @Number_Client)";
                 SQLiteCommand cmdContract = new SQLiteCommand(queryContract, connection);
                 cmdContract.Parameters.AddWithValue("@ID_Klient", clientId);
+                cmdContract.Parameters.AddWithValue("@ID_Personal", employeeId);
                 cmdContract.Parameters.AddWithValue("@ID_Car", carId);
                 cmdContract.Parameters.AddWithValue("@Summa", totalAmount);
                 cmdContract.Parameters.AddWithValue("@Date", currentDate);
@@ -233,9 +241,82 @@ namespace АИС_салона_по_аренде_автомобилей
 
         private void button2_Click(object sender, EventArgs e)
         {
-            string searchTerm = textBox8.Text;
-            string searchColumn = (string)comboBox1.SelectedItem;
-            LoadAutomobileData(searchTerm, searchColumn);
+            string searchTerm = textBox8.Text.Trim(); // Убираем лишние пробелы
+            string searchColumn = comboBox1.SelectedItem?.ToString();
+
+            // Проверяем, выбрано ли значение
+            if (string.IsNullOrEmpty(searchColumn))
+            {
+                MessageBox.Show("Пожалуйста, выберите столбец для поиска.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return; // Прерываем выполнение метода
+            }
+
+            // Теперь мы можем искать по введенным пользователем данным
+            connection.Open();
+            string searchQuery = @"
+        SELECT 
+            c.ID AS 'ID', 
+            s.Stamp AS 'Марка', 
+            s.Title AS 'Название', 
+            s.Color AS 'Цвет', 
+            co.Country AS 'Страна', 
+            c.Price AS 'Цена', 
+            c.Availability AS 'Доступность'
+        FROM 
+            Specifications s 
+        JOIN 
+            Cars c ON s.ID = c.ID_auto 
+        JOIN 
+            Country co ON c.ID_country = co.ID";
+
+            List<string> conditions = new List<string>();
+
+            switch (searchColumn)
+            {
+                case "Название":
+                    conditions.Add("s.Title LIKE @searchTerm");
+                    break;
+                case "Цена":
+                    conditions.Add("c.Price = @searchTerm");
+                    break;
+                case "Страна":
+                    conditions.Add("co.Country LIKE @searchTerm");
+                    break;
+                case "Марка":
+                    conditions.Add("s.Stamp LIKE @searchTerm");
+                    break;
+                case "Цвет":
+                    conditions.Add("s.Color LIKE @searchTerm");
+                    break;
+                case "Доступность":
+                    conditions.Add("c.Availability LIKE @searchTerm");
+                    break;
+            }
+
+            // Объединяем условия в WHERE
+            if (conditions.Count > 0)
+            {
+                searchQuery += " WHERE " + string.Join(" AND ", conditions);
+            }
+
+            adapter = new SQLiteDataAdapter(searchQuery, connection);
+            adapter.SelectCommand.Parameters.AddWithValue("@searchTerm", "%" + searchTerm + "%");
+
+            dt = new DataTable();
+            adapter.Fill(dt);
+
+            // Проверяем наличие данных в DataTable
+            if (dt.Rows.Count == 0)
+            {
+                MessageBox.Show("Автомобили не найдены по заданным критериям.", "Поиск", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                dataGridView1.DataSource = dt;
+            }
+
+            dataGridView1.Columns["ID"].Visible = false; // Скрываем колонку ID, если она есть
+            connection.Close();
         }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)

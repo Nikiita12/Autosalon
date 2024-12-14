@@ -28,7 +28,7 @@ namespace АИС_салона_по_аренде_автомобилей
         public Form3()
         {
             InitializeComponent();
-            connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;");
+            connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;");
             LoadKlientData();
             LoadAutomobileData();
             LoadContractData();
@@ -41,6 +41,10 @@ namespace АИС_салона_по_аренде_автомобилей
             dataGridView4.SelectionChanged += dataGridView4_SelectionChanged;
             dataGridView5.SelectionChanged += dataGridView5_SelectionChanged;
             dataGridView6.SelectionChanged += dataGridView6_SelectionChanged;
+            comboBox3.SelectedIndexChanged += comboBox3_SelectedIndexChanged;
+            comboBox5.SelectedIndexChanged += сomboBox5_SelectedIndexChanged;
+            textBox21.Leave += UpdateRentSum;
+            textBox22.Leave += UpdateRentSum;
 
             // Заполнение comboBox1 данными из таблицы specifications
             string query1 = "SELECT ID, Stamp || ' ' || Title AS Full FROM specifications";
@@ -78,15 +82,17 @@ namespace АИС_салона_по_аренде_автомобилей
             comboBox4.DisplayMember = "FullName";
             comboBox4.ValueMember = "ID";
 
-            // Заполнение comboBox5 данными из таблицы cars и specifications
+            
             string query5 = @"
-            SELECT 
-                cars.ID, 
-                specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль'
-            FROM 
-                cars 
-            JOIN 
-                specifications ON cars.ID_auto = specifications.ID";
+SELECT 
+    cars.ID, 
+    specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль',
+    cars.Price AS 'Цена'
+FROM 
+    cars 
+JOIN 
+    specifications ON cars.ID_auto = specifications.ID";
+
             SQLiteDataAdapter da5 = new SQLiteDataAdapter(query5, connection);
             DataTable dt5 = new DataTable();
             da5.Fill(dt5);
@@ -148,13 +154,14 @@ namespace АИС_салона_по_аренде_автомобилей
             adapter.Fill(dt);
             dataGridView1.DataSource = dt;
             connection.Close();
+            dataGridView1.Columns["ID"].Visible = false;
         }
 
         private void LoadAutomobileData()
         {
             connection.Open();
             string query = @"
-        SELECT 
+        SELECT
             cars.ID,
             specifications.Title AS 'Название',
             specifications.Stamp AS 'Марка',
@@ -171,26 +178,17 @@ namespace АИС_салона_по_аренде_автомобилей
             dt = new DataTable();
             adapter.Fill(dt);
             dataGridView2.DataSource = dt;
+            dataGridView2.Columns["ID"].Visible = false;
             connection.Close();
         }
 
-        private void UpdateCarAvailability(int carId, bool isAvailable)
-        {
-            string updateQuery = "UPDATE cars SET Availability = @Availability WHERE ID = @CarID";
-            using (SQLiteCommand command = new SQLiteCommand(updateQuery, connection))
-            {
-                command.Parameters.AddWithValue("@Availability", isAvailable ? "Yes" : "No");
-                command.Parameters.AddWithValue("@CarID", carId);
-                command.ExecuteNonQuery();
-            }
-        }
-
+        
         private void LoadContractData()
         {
             connection.Open();
             string query = @"
     SELECT 
-        contract.ID,
+        Contract.ID, -- Сохраняем ID для внутренних нужд
         klients.Surname || ' ' || klients.Name || ' ' || klients.LastName AS 'Клиент',
         personal.Surname || ' ' || personal.Name || ' ' || personal.LastName AS 'Персонал',
         specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль',
@@ -208,11 +206,15 @@ namespace АИС_салона_по_аренде_автомобилей
         cars ON contract.ID_car = cars.ID
     LEFT JOIN 
         specifications ON cars.ID_auto = specifications.ID";
+
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
             dataGridView3.DataSource = dt;
+            dataGridView3.Columns["ID"].Visible = false;
             connection.Close();
+
+            
 
             // Добавляем событие RowPrePaint для изменения цвета строки
             dataGridView3.RowPrePaint += DataGridView3_RowPrePaint;
@@ -231,6 +233,8 @@ namespace АИС_салона_по_аренде_автомобилей
                 if (difference.TotalDays < 0)
                 {
                     dgv.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.Red; // Аренда закончилась
+                                                                                 // Обновляем доступность автомобиля
+                    UpdateCarAvailabilityInDatabase(dgv.Rows[e.RowIndex].Cells["ID"].Value.ToString(), "Yes"); // Обновляем доступность
                 }
                 else if (difference.TotalDays <= 1)
                 {
@@ -243,6 +247,20 @@ namespace АИС_салона_по_аренде_автомобилей
             }
         }
 
+        private void UpdateCarAvailabilityInDatabase(string carId, string availability)
+        {
+            connection.Open();
+            string query = "UPDATE cars SET Availability = @availability WHERE ID = @carId";
+            using (SQLiteCommand command = new SQLiteCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@availability", availability);
+                command.Parameters.AddWithValue("@carId", carId);
+                command.ExecuteNonQuery();
+            }
+            connection.Close();
+        }
+
+        
         private void LoadPersonalData()
         {
             connection.Open();
@@ -251,6 +269,7 @@ namespace АИС_салона_по_аренде_автомобилей
             dt = new DataTable();
             adapter.Fill(dt);
             dataGridView4.DataSource = dt;
+            dataGridView4.Columns["ID"].Visible = false;
             connection.Close();
         }
 
@@ -262,6 +281,7 @@ namespace АИС_салона_по_аренде_автомобилей
             dt = new DataTable();
             adapter.Fill(dt);
             dataGridView6.DataSource = dt;
+            dataGridView6.Columns["ID"].Visible = false;
             connection.Close();
         }
 
@@ -273,6 +293,7 @@ namespace АИС_салона_по_аренде_автомобилей
             dt = new DataTable();
             adapter.Fill(dt);
             dataGridView5.DataSource = dt;
+            dataGridView5.Columns["ID"].Visible = false;
             connection.Close();
         }
 
@@ -326,6 +347,7 @@ namespace АИС_салона_по_аренде_автомобилей
             connection.Open();
             cmd.ExecuteNonQuery();
             connection.Close();
+            MessageBox.Show("Запись успешно добавлена");
             LoadKlientData();
         }
 
@@ -372,6 +394,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 connection.Open();
                 cmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно обновлена");
                 LoadKlientData();
             }
             else
@@ -393,6 +416,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Klients SET ID = (SELECT COUNT(*) FROM Klients k2 WHERE k2.ID < Klients.ID) + 1", connection);
                 reorderCmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно удалена");
                 LoadKlientData();
             }
             else
@@ -424,6 +448,7 @@ namespace АИС_салона_по_аренде_автомобилей
             connection.Open();
             cmd.ExecuteNonQuery();
             connection.Close();
+            MessageBox.Show("Запись успешно добавлена");
             LoadAutomobileData();
         }
 
@@ -455,6 +480,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 connection.Open();
                 cmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно обновлена");
                 LoadAutomobileData();
             }
             else
@@ -476,6 +502,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Cars SET ID = (SELECT COUNT(*) FROM Cars c2 WHERE c2.ID < Cars.ID) + 1", connection);
                 reorderCmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно удалена");
                 LoadAutomobileData();
             }
             else
@@ -528,6 +555,7 @@ namespace АИС_салона_по_аренде_автомобилей
             connection.Open();
             cmd.ExecuteNonQuery();
             connection.Close();
+            MessageBox.Show("Запись успешно добавлена");
             LoadPersonalData();
         }
 
@@ -568,6 +596,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 connection.Open();
                 cmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно обновлена");
                 LoadPersonalData();
             }
             else
@@ -589,6 +618,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Personal SET ID = (SELECT COUNT(*) FROM Personal p2 WHERE p2.ID < Personal.ID) + 1", connection);
                 reorderCmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно удалена");
                 LoadPersonalData();
             }
             else
@@ -607,6 +637,7 @@ namespace АИС_салона_по_аренде_автомобилей
             connection.Open();
             cmd.ExecuteNonQuery();
             connection.Close();
+            MessageBox.Show("Запись успешно добавлена");
             LoadSpecificationsData();
         }
 
@@ -624,6 +655,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 connection.Open();
                 cmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно обновлена");
                 LoadSpecificationsData();
             }
             else
@@ -645,6 +677,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Specifications SET ID = (SELECT COUNT(*) FROM Specifications s2 WHERE s2.ID < Specifications.ID) + 1", connection);
                 reorderCmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно удалена");
                 LoadSpecificationsData();
             }
             else
@@ -673,6 +706,7 @@ namespace АИС_салона_по_аренде_автомобилей
             connection.Open();
             cmd.ExecuteNonQuery();
             connection.Close();
+            MessageBox.Show("Запись успешно добавлена");
             LoadCountryData();
         }
 
@@ -695,6 +729,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 connection.Open();
                 cmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно обновлена");
                 LoadCountryData();
             }
             else
@@ -716,6 +751,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE Country SET ID = (SELECT COUNT(*) FROM Country c2 WHERE c2.ID < Country.ID) + 1", connection);
                 reorderCmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно удалена");
                 LoadCountryData();
             }
             else
@@ -726,9 +762,78 @@ namespace АИС_салона_по_аренде_автомобилей
 
         private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
         {
-            DataRowView selectedRow = (DataRowView)comboBox3.SelectedItem;
-            textBox17.Text = selectedRow["Seria"].ToString();
-            textBox20.Text = selectedRow["Number"].ToString();
+            if (comboBox3.SelectedItem is DataRowView selectedClient)
+            {
+                // Проверяем, есть ли нужные поля
+                if (selectedClient.Row.Table.Columns.Contains("Seria") && selectedClient.Row.Table.Columns.Contains("Number"))
+                {
+                    string seria = selectedClient["Seria"]?.ToString();
+                    string number = selectedClient["Number"]?.ToString();
+
+                    // Заполняем текстовые поля
+                    textBox17.Text = seria;
+                    textBox20.Text = number;
+                }
+                else
+                {
+                    MessageBox.Show("Обратите внимание: столбцы 'Seria' или 'Number' отсутствуют в источнике данных.");
+                }
+            }
+        }
+
+        private void сomboBox5_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBox5.SelectedItem is DataRowView selectedCar)
+            {
+                if (selectedCar.Row.Table.Columns.Contains("Цена")) // Обратите внимание на правильное имя столбца
+                {
+                    decimal price = Convert.ToDecimal(selectedCar["Цена"]);
+                    textBox18.Text = price.ToString("F2");
+                }
+                else
+                {
+                    MessageBox.Show("Столбец 'Цена' отсутствует в данных.");
+                }
+            }
+        }
+
+        private void UpdateRentSum(object sender, EventArgs e)
+        {
+            // Параметры для хранения значений
+            decimal dailyRate = 0m;
+            DateTime startDate;
+            DateTime endDate;
+
+            // Получаем цену автомобиля, если выбран элемент в comboBox5
+            if (comboBox5.SelectedValue != null)
+            {
+                DataRowView selectedCar = (DataRowView)comboBox5.SelectedItem;
+                if (decimal.TryParse(selectedCar["Цена"].ToString(), out dailyRate))
+                {
+                    // Заполняем текстовое поле для начальной суммы
+                    textBox18.Text = dailyRate.ToString("F2");
+                }
+            }
+
+            // Проверяем ввод даты начала аренды
+            if (DateTime.TryParse(textBox21.Text, out startDate) &&
+                DateTime.TryParse(textBox22.Text, out endDate))
+            {
+                // Рассчитываем количество дней аренды
+                int rentalDays = (endDate - startDate).Days;
+
+                // Проверяем корректность дат
+                if (rentalDays > 0 && dailyRate > 0)
+                {
+                    decimal totalSum = rentalDays * dailyRate;
+                    // Обновляем текстовое поле с общей стоимостью
+                    textBox18.Text = totalSum.ToString("F2");
+                }
+                else if (rentalDays <= 0)
+                {
+                    MessageBox.Show("Дата окончания аренды должна быть позже даты начала аренды.");
+                }
+            }
         }
 
         private void button9_Click(object sender, EventArgs e)
@@ -757,7 +862,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 return;
             }
 
-            if (!IsUniqueSeriaNumber(textBox17.Text, textBox20.Text))
+            if (!IsUniqueSeriaNumberContract(textBox17.Text, textBox20.Text))
             {
                 MessageBox.Show("Такое сочетание серии и номера уже существует.");
                 return;
@@ -789,6 +894,7 @@ namespace АИС_салона_по_аренде_автомобилей
             connection.Open();
             cmd.ExecuteNonQuery();
             connection.Close();
+            MessageBox.Show("Запись успешно добавлена");
             LoadContractData();
         }
 
@@ -849,6 +955,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 connection.Open();
                 cmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно обновлена");
                 LoadContractData();
             }
             else
@@ -865,7 +972,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 string contractId = selectedRow.Cells["ID"].Value.ToString();
 
                 // Сохранение данных удаленного контракта
-                using (SQLiteConnection connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;"))
+                using (SQLiteConnection connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;"))
                 {
                     connection.Open();
                     string insertQuery = @"
@@ -900,6 +1007,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 SQLiteCommand reorderCmd = new SQLiteCommand("UPDATE contract SET ID = (SELECT COUNT(*) FROM contract c2 WHERE c2.ID < contract.ID) + 1", connection);
                 reorderCmd.ExecuteNonQuery();
                 connection.Close();
+                MessageBox.Show("Запись успешно удалена");
                 LoadContractData();
 
                 // Обновление данных в форме 4
@@ -928,7 +1036,14 @@ namespace АИС_салона_по_аренде_автомобилей
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
-            dataGridView1.DataSource = dt;
+            if (dt.Rows.Count == 0)
+            {
+                MessageBox.Show("Записи не найдены.");
+            }
+            else
+            {
+                dataGridView1.DataSource = dt;
+            }
         }
 
         private void button7_Click(object sender, EventArgs e)
@@ -947,7 +1062,14 @@ namespace АИС_салона_по_аренде_автомобилей
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
-            dataGridView4.DataSource = dt;
+            if (dt.Rows.Count == 0)
+            {
+                MessageBox.Show("Записи не найдены.");
+            }
+            else
+            {
+                dataGridView4.DataSource = dt;
+            }
         }
 
         private void button11_Click(object sender, EventArgs e)
@@ -966,7 +1088,14 @@ namespace АИС_салона_по_аренде_автомобилей
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
-            dataGridView5.DataSource = dt;
+            if (dt.Rows.Count == 0)
+            {
+                MessageBox.Show("Записи не найдены.");
+            }
+            else
+            {
+                dataGridView5.DataSource = dt;
+            }
         }
 
         private void button14_Click(object sender, EventArgs e)
@@ -1016,7 +1145,14 @@ namespace АИС_салона_по_аренде_автомобилей
             adapter = new SQLiteDataAdapter(query, connection);
             dt = new DataTable();
             adapter.Fill(dt);
-            dataGridView2.DataSource = dt;
+            if (dt.Rows.Count == 0)
+            {
+                MessageBox.Show("Записи не найдены.");
+            }
+            else
+            {
+                dataGridView2.DataSource = dt;
+            }
         }
 
         private void button19_Click(object sender, EventArgs e)
@@ -1067,7 +1203,14 @@ LEFT JOIN
             {
                 DataTable dt = new DataTable();
                 adapter.Fill(dt);
-                dataGridView3.DataSource = dt;
+                if (dt.Rows.Count == 0)
+                {
+                    MessageBox.Show("Записи не найдены.");
+                }
+                else
+                {
+                    dataGridView3.DataSource = dt;
+                }
             }
         }
 
@@ -1131,8 +1274,7 @@ LEFT JOIN
                 string selectedStamp = selectedRow.Cells["Марка"].Value?.ToString() ?? "";
                 string selectedTitle = selectedRow.Cells["Название"].Value?.ToString() ?? "";
                 string selectedAuto = !string.IsNullOrEmpty(selectedStamp) && !string.IsNullOrEmpty(selectedTitle)
-                    ? $"{selectedStamp} {selectedTitle}"
-                    : "";
+                    ? $"{selectedStamp} {selectedTitle}": "";
 
                 if (!string.IsNullOrEmpty(selectedAuto))
                 {
@@ -1167,75 +1309,111 @@ LEFT JOIN
         {
             if (dataGridView3.SelectedRows.Count > 0)
             {
-                string query = @"
-        SELECT 
-            Contract.ID,
-            COALESCE(klients.Surname || ' ' || klients.Name || ' ' || klients.LastName, '') AS Клиент,
-            COALESCE(personal.Surname || ' ' || personal.Name || ' ' || personal.LastName, '') AS Персонал,
-            COALESCE(specifications.Stamp, '') || ' ' || COALESCE(specifications.Title, '') AS Автомобиль,
-            Contract.Date,
-            Contract.Summa,
-            Contract.SeriaKlient,
-            Contract.NumberKlient,
-            Contract.BeginArenda,
-            Contract.EndArenda
-        FROM 
-            Contract
-        LEFT JOIN 
-            klients ON Contract.ID_klient = klients.ID
-        LEFT JOIN
-            personal ON Contract.ID_personal = personal.ID  
-        LEFT JOIN
-            cars ON Contract.ID_car = cars.ID
-        LEFT JOIN
-            specifications ON cars.ID_auto = specifications.ID
-        WHERE 
-            Contract.ID = @contractID";
+                DataGridViewRow selectedRow = dataGridView3.SelectedRows[0];
 
-                SQLiteDataAdapter da = new SQLiteDataAdapter(query, connection);
-                da.SelectCommand.Parameters.AddWithValue("@contractID", dataGridView3.SelectedRows[0].Cells["ID"].Value);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-                dataGridView7.DataSource = dt;
+                // Получаем ID выбранного контракта
+                int contractID = Convert.ToInt32(selectedRow.Cells["ID"].Value);
 
-                textBox17.Text = dataGridView7.Rows[0].Cells["SeriaKlient"].Value?.ToString() ?? "";
-                textBox20.Text = dataGridView7.Rows[0].Cells["NumberKlient"].Value?.ToString() ?? "";
-                textBox21.Text = dataGridView7.Rows[0].Cells["BeginArenda"].Value?.ToString() ?? "";
-                textBox22.Text = dataGridView7.Rows[0].Cells["EndArenda"].Value?.ToString() ?? "";
-                textBox18.Text = dataGridView7.Rows[0].Cells["Summa"].Value?.ToString() ?? "";
-                textBox19.Text = dataGridView7.Rows[0].Cells["Date"].Value?.ToString() ?? "";
+                // Запрос для получения данных контракта для DataGridView7
+                string query7 = @"
+SELECT 
+    COALESCE(klients.Surname || ' ' || klients.Name || ' ' || klients.LastName, '') AS 'Клиент',
+    COALESCE(personal.Surname || ' ' || personal.Name || ' ' || personal.LastName, '') AS 'Сотрудник',
+    COALESCE(specifications.Stamp, '') || ' ' || COALESCE(specifications.Title, '') AS 'Автомобиль',
+    Contract.Date AS 'Дата',
+    Contract.Summa AS 'Сумма',
+    Contract.BeginArenda AS 'Начало Аренды',
+    Contract.EndArenda AS 'Конец Аренды',
+    Contract.SeriaKlient AS 'Серия паспорта клиента',
+    Contract.NumberKlient AS 'Номер паспорта клиента'
+FROM 
+    Contract
+LEFT JOIN 
+    klients ON Contract.ID_klient = klients.ID
+LEFT JOIN
+    personal ON Contract.ID_personal = personal.ID  
+LEFT JOIN
+    cars ON Contract.ID_car = cars.ID
+LEFT JOIN
+    specifications ON cars.ID_auto = specifications.ID
+WHERE 
+    Contract.ID = @contractID";
 
-                string clientFullName = dataGridView7.Rows[0].Cells["Клиент"].Value?.ToString() ?? "";
-                for (int i = 0; i < comboBox3.Items.Count; i++)
+                DataTable dt7 = new DataTable();
+                using (SQLiteDataAdapter da = new SQLiteDataAdapter(query7, connection))
                 {
-                    DataRowView item = (DataRowView)comboBox3.Items[i];
-                    if (item["FullName"].ToString() == clientFullName)
-                    {
-                        comboBox3.SelectedIndex = i;
-                        break;
-                    }
+                    da.SelectCommand.Parameters.AddWithValue("@contractID", contractID);
+                    da.Fill(dt7);
+                    dataGridView7.DataSource = dt7;
                 }
 
-                string personalFullName = dataGridView7.Rows[0].Cells["Персонал"].Value?.ToString() ?? "";
-                for (int i = 0; i < comboBox4.Items.Count; i++)
+                // Автозаполнение TextBoxes
+                if (dt7.Rows.Count > 0)
                 {
-                    DataRowView item = (DataRowView)comboBox4.Items[i];
-                    if (item["FullName"].ToString() == personalFullName)
+                    DataRow row = dt7.Rows[0];
+
+                    textBox17.Text = row["Серия паспорта клиента"]?.ToString() ?? "";
+                    textBox20.Text = row["Номер паспорта клиента"]?.ToString() ?? "";
+                    textBox21.Text = row["Начало Аренды"]?.ToString() ?? "";
+                    textBox22.Text = row["Конец Аренды"]?.ToString() ?? "";
+                    textBox18.Text = row["Сумма"]?.ToString() ?? "";
+                    textBox19.Text = row["Дата"]?.ToString() ?? "";
+
+                    // Обновление ComboBox значений
+                    string klientName = selectedRow.Cells["Клиент"].Value?.ToString() ?? ""; // Обратите внимание, что по-прежнему может возникнуть ошибка здесь
+                    if (!string.IsNullOrEmpty(klientName))
                     {
-                        comboBox4.SelectedIndex = i;
-                        break;
+                        for (int i = 0; i < comboBox3.Items.Count; i++)
+                        {
+                            if (((DataRowView)comboBox3.Items[i])["FullName"].ToString() == klientName)
+                            {
+                                comboBox3.SelectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    string personalName = selectedRow.Cells["Персонал"].Value?.ToString() ?? "";
+                    if (!string.IsNullOrEmpty(personalName))
+                    {
+                        for (int i = 0; i < comboBox4.Items.Count; i++)
+                        {
+                            if (((DataRowView)comboBox4.Items[i])["FullName"].ToString() == personalName)
+                            {
+                                comboBox4.SelectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    string carName = selectedRow.Cells["Автомобиль"].Value?.ToString() ?? "";
+                    if (!string.IsNullOrEmpty(carName))
+                    {
+                        for (int i = 0; i < comboBox5.Items.Count; i++)
+                        {
+                            if (((DataRowView)comboBox5.Items[i])["Автомобиль"].ToString() == carName)
+                            {
+                                comboBox5.SelectedIndex = i;
+                                break;
+                            }
+                        }
                     }
                 }
-
-                string autoFullName = dataGridView7.Rows[0].Cells["Автомобиль"].Value?.ToString() ?? "";
-                for (int i = 0; i < comboBox5.Items.Count; i++)
+                else
                 {
-                    DataRowView item = (DataRowView)comboBox5.Items[i];
-                    if (item["Автомобиль"].ToString() == autoFullName)
-                    {
-                        comboBox5.SelectedIndex = i;
-                        break;
-                    }
+                    // Если данные не найдены, очищаем все поля
+                    textBox17.Text = "";
+                    textBox20.Text = "";
+                    textBox21.Text = "";
+                    textBox22.Text = "";
+                    textBox18.Text = "";
+                    textBox19.Text = "";
+
+                    comboBox3.SelectedIndex = -1;
+                    comboBox4.SelectedIndex = -1;
+                    comboBox5.SelectedIndex = -1;
+
+                    dataGridView7.DataSource = null; // Очищаем DataGridView
                 }
             }
         }
@@ -1279,6 +1457,18 @@ LEFT JOIN
         private bool IsValidName(string name)
         {
             return !string.IsNullOrEmpty(name) && name.All(char.IsLetter);
+        }
+
+        private bool IsUniqueSeriaNumberContract(string seria, string number)
+        {
+            string query = "SELECT COUNT(*) FROM Contract WHERE SeriaKlient=@Seria AND NumberKlient=@Number";
+            SQLiteCommand cmd = new SQLiteCommand(query, connection);
+            cmd.Parameters.AddWithValue("@Seria", seria);
+            cmd.Parameters.AddWithValue("@Number", number);
+            connection.Open();
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+            connection.Close();
+            return count == 0;
         }
 
         private bool IsUniqueSeriaNumber(string seria, string number)
@@ -1371,10 +1561,10 @@ LEFT JOIN
 
         private void LoadKlientComboBoxData()
         {
-            using (SQLiteConnection connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;"))
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;"))
             {
                 connection.Open();
-                string query = "SELECT ID, Surname || ' ' || Name || ' ' || LastName AS FullName FROM Klients";
+                string query = "SELECT ID, Surname || ' ' || Name || ' ' || LastName AS FullName, Seria, Number FROM Klients";
                 SQLiteDataAdapter da = new SQLiteDataAdapter(query, connection);
                 DataTable dt = new DataTable();
                 da.Fill(dt);
@@ -1387,23 +1577,37 @@ LEFT JOIN
 
         private void LoadAutomobileComboBoxData()
         {
-            using (SQLiteConnection connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;"))
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;"))
             {
                 connection.Open();
-                string query = "SELECT ID, Stamp || ' ' || Title AS FullName FROM Specifications";
-                SQLiteDataAdapter da = new SQLiteDataAdapter(query, connection);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-                comboBox5.DataSource = dt;
-                comboBox5.DisplayMember = "FullName";
-                comboBox5.ValueMember = "ID";
+
+                // Новый SQL-запрос, который вы предоставили
+                string query5 = @"
+        SELECT 
+            cars.ID, 
+            specifications.Stamp || ' ' || specifications.Title AS 'Автомобиль',
+            cars.Price AS 'Цена'
+        FROM 
+            cars 
+        JOIN 
+            specifications ON cars.ID_auto = specifications.ID";
+
+                SQLiteDataAdapter da5 = new SQLiteDataAdapter(query5, connection);
+                DataTable dt5 = new DataTable();
+                da5.Fill(dt5);
+
+                // Связываем данные с комбобоксом
+                comboBox5.DataSource = dt5;
+                comboBox5.DisplayMember = "Автомобиль"; // Отображаем в комбобоксе
+                comboBox5.ValueMember = "ID"; // Задаем значение для каждого элемента
+
                 connection.Close();
             }
         }
 
         private void LoadPersonalComboBoxData()
         {
-            using (SQLiteConnection connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;"))
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;"))
             {
                 connection.Open();
                 string query = "SELECT ID, Surname || ' ' || Name || ' ' || LastName AS FullName FROM Personal";
@@ -1419,7 +1623,7 @@ LEFT JOIN
 
         private void LoadCountryComboBoxData()
         {
-            using (SQLiteConnection connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;"))
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;"))
             {
                 connection.Open();
                 string query = "SELECT ID, Country FROM Country";

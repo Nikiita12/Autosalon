@@ -32,11 +32,12 @@ namespace АИС_салона_по_аренде_автомобилей
 
         public void LoadDeletedContractData()
         {
-            using (SQLiteConnection connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;"))
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;"))
             {
                 connection.Open();
                 string query = @"
-        SELECT 
+        SELECT
+            ID,
             Klient AS 'Клиент',
             Personal AS 'Персонал',
             Avto AS 'Автомобиль',
@@ -51,6 +52,7 @@ namespace АИС_салона_по_аренде_автомобилей
                 DataTable dt = new DataTable();
                 adapter.Fill(dt);
                 dataGridView1.DataSource = dt;
+                dataGridView1.Columns["ID"].Visible = false;
                 connection.Close();
             }
         }
@@ -61,7 +63,8 @@ namespace АИС_салона_по_аренде_автомобилей
             if (string.IsNullOrEmpty(textBox1.Text))
             {
                 query = @"
-        SELECT 
+        SELECT
+            ID,
             Klient AS 'Клиент',
             Personal AS 'Персонал',
             Avto AS 'Автомобиль',
@@ -77,7 +80,8 @@ namespace АИС_салона_по_аренде_автомобилей
                 string selectedField = comboBox1.SelectedItem.ToString();
                 string searchText = textBox1.Text;
                 query = $@"
-        SELECT 
+        SELECT
+            ID,
             Klient AS 'Клиент',
             Personal AS 'Персонал',
             Avto AS 'Автомобиль',
@@ -91,14 +95,20 @@ namespace АИС_салона_по_аренде_автомобилей
             [{selectedField}] LIKE '%{searchText}%'";
             }
 
-            using (SQLiteConnection connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;"))
+            using (SQLiteConnection connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;"))
             {
                 connection.Open();
                 SQLiteDataAdapter adapter = new SQLiteDataAdapter(query, connection);
                 DataTable dt = new DataTable();
                 adapter.Fill(dt);
-                dataGridView1.DataSource = dt;
-                connection.Close();
+                if (dt.Rows.Count == 0)
+                {
+                    MessageBox.Show("Записи не найдены.");
+                }
+                else
+                {
+                    dataGridView1.DataSource = dt;
+                }
             }
         }
 
@@ -108,7 +118,7 @@ namespace АИС_салона_по_аренде_автомобилей
             {
                 string selectedId = dataGridView1.SelectedRows[0].Cells["ID"].Value.ToString();
 
-                using (SQLiteConnection connection = new SQLiteConnection("Data Source=E:\\Autosalon.db;Version=3;"))
+                using (SQLiteConnection connection = new SQLiteConnection("Data Source=Autosalon.db;Version=3;"))
                 {
                     connection.Open();
                     string query = "DELETE FROM DeletedContracts WHERE ID=@ID";
@@ -118,6 +128,7 @@ namespace АИС_салона_по_аренде_автомобилей
                     connection.Close();
                 }
 
+                MessageBox.Show("Запись успешно удалена");
                 LoadDeletedContractData();
             }
             else
